@@ -1,0 +1,19 @@
+#ifndef ERROR_H
+#define ERROR_H
+typedef enum{
+    ERROR_OK = 0
+    /* System error */
+    ERROR_MEMORY_RELLOCATE,
+    ERROR_INVLID_POINTER,
+    ERROR_CONNET_DB,
+    ERROR_OUTPUT_FILE,
+    /* Account Errors */
+    ERROR_INVLID_ARGUMENT,
+    ERROR_INSUFFENT_SAVING,
+    ERROR_INVALID_TRANSCATION,
+    ERROR_EXCEED_CREDIT_LIMITATION,
+    /* Inventory error */
+    ERROR_INSUFFENT_INVENTORY,
+    ERROR_INVALID_SN,
+} ErrorCode;
+#endif

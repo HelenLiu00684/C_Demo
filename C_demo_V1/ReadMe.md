@@ -1,294 +1,337 @@
-# Advanced Bank & Portfolio Management System (C)
+Advanced Bank Engine
+Systems-Level Financial Engine in C
 
-## Overview
+====================================================
 
-This project extends a basic bank account system into a modular
-financial engine implemented entirely in C.
+OVERVIEW
 
-It supports:
+Advanced Bank Engine is a systems-level C project that implements a modular financial transaction engine with strict ownership-based memory management, deterministic lifecycle control, and layered architecture.
 
--   Dynamic multi-customer management\
--   Savings accounts\
--   Credit card accounts\
--   Stock inventory pool\
--   Investment pool with time-lock constraints\
--   Portfolio ownership tracking\
--   Automatic dynamic memory expansion (80% threshold rule)\
--   ncurses-based terminal interface\
--   File input/output support\
--   JSON state export
+This project demonstrates:
 
-The system is designed with strict separation between:
+Structured C data modeling
 
--   Core business logic\
--   User interface\
--   Persistence layer
+Ownership-driven memory discipline
 
-------------------------------------------------------------------------
+Dynamic container expansion strategy (80% rule)
 
-## System Architecture
+Transaction lifecycle tracking
 
-The project is divided into three logical layers:
+Modular architecture design
 
-### 1. Core Engine
+UI and business logic separation
 
-Handles:
+Persistence abstraction
 
--   Customer lifecycle management\
--   Asset inventory management\
--   Transaction validation\
--   Trading logic\
--   Credit control\
--   Memory ownership and cleanup
+Multi-user locking strategy planning
 
-### 2. UI Layer (ncurses)
+This is NOT a web backend.
+This is a systems architecture demonstration project written in pure C.
 
-Provides:
+====================================================
 
--   Interactive menu navigation\
--   Account selection\
--   Real-time transaction feedback\
--   Error display\
--   Structured terminal rendering
+ARCHITECTURE (LAYERED DESIGN)
 
-The UI layer does not contain business logic.\
-It interacts only with exposed engine APIs.
+UI Layer (ncurses) [Phase 2]
+↓
+Core Engine (Memory) [Phase 1]
+↓
+Persistence Interface [Phase 3]
+↓
+SQLite Implementation [Phase 3]
 
-### 3. Persistence Layer
+The engine is completely independent of UI and database layers.
 
-Supports:
+====================================================
 
--   Loading system state from file\
--   Saving system state to file\
--   JSON export of full runtime state
+PHASE 1 — PURE C ENGINE (IN-MEMORY CLOSED LOOP)
 
-------------------------------------------------------------------------
+Goal
+Build a deterministic, fully functional in-memory engine with strict lifecycle control.
 
-## Core Functional Features
+No GUI.
+No database.
+Optional transaction log print only.
 
-### Customer Management
+Core Engine Components
 
--   Customers are stored in a dynamic array\
--   Automatic expansion occurs when size reaches 80% of capacity\
--   Capacity doubles during expansion\
--   Safe realloc pattern is used
+Bank struct (root owner)
 
-Each customer contains:
+Customer dynamic array (80% expansion rule)
 
--   Savings account\
--   Credit card account\
--   Portfolio (owned stocks and investments)
+Stock inventory pool
 
-------------------------------------------------------------------------
+Investment pool
 
-### Savings Account
+Portfolio ownership model
 
--   Stores liquid cash balance\
--   Used to purchase stocks and investments\
--   Updated after every transaction
+Savings account
 
-------------------------------------------------------------------------
+Credit card with limit enforcement
 
-### Credit Card System
+Dynamic transaction log per customer
 
-Each customer has:
+Transaction Model
 
--   Credit limit\
--   Used credit balance
+Each transaction includes:
 
-Constraint:
+Type
 
-    used <= limit
+Amount
 
--   Spending increases used credit\
--   Repayment decreases used credit\
--   Credit usage cannot exceed the defined limit
+Timestamp
 
-------------------------------------------------------------------------
+Description
 
-### Stock Inventory Pool (System-Level)
+Each customer owns:
 
-Each stock includes:
+A dynamic transaction log
 
--   Unique ID\
--   Name\
--   Total quantity\
--   Remaining quantity\
--   Price
+Trading / Validation Rules (inside engine)
 
-Rules:
+Validate liquidity
 
--   System prevents overselling\
--   Remaining quantity decreases on buy\
--   Remaining quantity increases on sell
+Validate inventory
 
-------------------------------------------------------------------------
+Validate lock period
 
-### Investment Pool (Time-Locked Assets)
+Validate credit limit
 
-Each investment includes:
+Unified error codes
 
--   Unique ID\
--   Name\
--   Total quantity\
--   Remaining quantity\
--   Price\
--   Lock period (days)
+Memory Discipline
 
-Investments cannot be sold before unlock time.
+Clear ownership tree
 
-------------------------------------------------------------------------
+No leaks
 
-### Portfolio Ownership Model
+No double free
 
-Customers do not duplicate stock definitions.
+Reverse-order cleanup
 
-Instead, each owned asset stores:
+Deterministic lifecycle control
 
--   Asset ID reference\
--   Quantity\
--   Purchase timestamp\
--   Unlock timestamp (for investments)
+Lock Abstraction (Interface Only)
 
-This maintains:
+Define lock interface for future multi-user support:
 
--   Single source of truth\
--   Inventory consistency\
--   Clean ownership modeling
+lock_init()
+lock_acquire()
+lock_release()
+lock_destroy()
 
-------------------------------------------------------------------------
+Implementation may be dummy in Phase 1 (single-process mode).
 
-## Trading Logic
+Deliverable
 
-### Buying Assets
+Clean CLI test version
 
-Transaction is allowed only if:
+Fully working engine
 
--   Savings balance is sufficient\
--   Inventory has sufficient remaining quantity
+Stable lifecycle
 
-If valid:
+Deterministic behavior
 
--   Savings decreases\
--   Inventory remaining quantity decreases\
--   Portfolio position increases
+====================================================
 
-------------------------------------------------------------------------
+PHASE 2 — UI LAYER (NCURSES)
 
-### Selling Assets
+Goal
+Add terminal UI without touching engine logic.
 
-Transaction is allowed only if:
+Rules
 
--   Customer owns sufficient quantity\
--   Investment lock period has expired (if applicable)
+UI must not access internal structs directly
 
-If valid:
+UI calls only engine APIs
 
--   Savings increases\
--   Inventory remaining quantity increases\
--   Portfolio position decreases
+All validation remains inside engine
 
-------------------------------------------------------------------------
+Error codes mapped to readable messages
 
-## Dynamic Memory Strategy
+Features
 
-Dynamic arrays are used for:
+Menu navigation
 
--   Customers\
--   Stocks\
--   Investments\
--   Customer portfolios
+Customer selection
 
-Expansion rule:
+Transaction execution
 
-    If size >= 80% of capacity → capacity doubles
+Transaction history display
 
-This ensures scalability and minimizes frequent memory reallocations.
+Sync button (placeholder)
 
-------------------------------------------------------------------------
+Deliverable
 
-## File Input / Output
+Interactive terminal system
 
-The system supports:
+Clean separation of concerns
 
--   Loading initial bank state from file\
--   Saving current runtime state\
--   Appending transaction logs\
--   Safe file open and error handling
+====================================================
 
-All file operations validate input data before applying changes.
+PHASE 3 — PERSISTENCE + SQLITE INTEGRATION
 
-------------------------------------------------------------------------
+Goal
+Add database-backed persistence using a clean abstraction layer.
 
-## JSON Export
+Architecture
 
-The system can export a complete runtime snapshot in JSON format.
+UI
+↓
+Engine (Memory)
+↓
+Persistence Interface
+↓
+SQLite Implementation
 
-The JSON output includes:
+Startup Flow
 
--   Customer information\
--   Savings balance\
--   Credit usage\
--   Portfolio holdings\
--   System inventory state
+Connect database
 
-JSON export enables:
+Load customers
 
--   Debugging\
--   State inspection\
--   External integration\
--   Future persistence upgrades
+Load inventories
 
-------------------------------------------------------------------------
+Load transactions
 
-## Memory Ownership Model
+Build memory state
 
-Ownership hierarchy:
+Sync Flow
 
-Bank ├── Customers\[\] │ ├── OwnedStocks\[\] │ └── OwnedInvestments\[\]
-├── StockInventory\[\] └── InvestmentInventory\[\]
+Begin transaction
 
-Responsibilities:
+Serialize memory state
 
--   Bank frees all global containers\
--   Each customer frees its own portfolio arrays\
--   Memory is released in reverse ownership order
+Update database
 
-------------------------------------------------------------------------
+Commit transaction
 
-## Error Handling
+Locking Strategy
 
-The system validates and prevents:
+Level 1: In-Process (Optional)
 
--   Insufficient savings balance\
--   Credit limit overflow\
--   Inventory shortage\
--   Investment lock violations\
--   Invalid transaction input\
--   Memory allocation failure\
--   File I/O failure
+pthread mutex
 
-------------------------------------------------------------------------
+Level 2: Multi-Process (Real Lock)
 
-## Engineering Concepts Demonstrated
+SQLite transactions
 
--   Structured modular C design\
--   Ownership-based memory management\
--   Dynamic container resizing\
--   Constraint-based transaction engine\
--   Inventory consistency control\
--   Time-based state validation\
--   Separation of UI and core logic\
--   Persistence abstraction
+Optional file locking if required
 
-------------------------------------------------------------------------
+SQLite provides safe concurrent access through transactional locking.
 
-## Future Extensions
+====================================================
 
--   Interest accrual engine\
--   Dividend distribution\
--   Transaction audit logs\
--   Persistent database backend\
--   Risk scoring model\
--   Multi-user simulation\
--   Thread-safe transaction processing
+MULTI-USER STRATEGY (FINAL MODEL)
+
+In-memory
+
+Optional mutex for thread safety
+
+Database
+
+Use SQLite transactional locking
+
+Avoid manual low-level file locking
+
+Engine remains unaware of database details.
+
+====================================================
+
+COMPLEXITY CONTROL STRATEGY
+
+Do NOT combine phases.
+
+Correct development order:
+
+Memory engine stable
+
+UI integration
+
+Database persistence
+
+Locking reinforcement
+
+====================================================
+
+ENGINEERING PRINCIPLES DEMONSTRATED
+
+Structured C modular design
+
+Ownership-based lifecycle control
+
+Dynamic container expansion strategy (80% rule)
+
+Constraint-driven transaction engine
+
+Inventory consistency enforcement
+
+Time-based validation
+
+Separation of UI and business logic
+
+Persistence abstraction
+
+Locking strategy planning
+
+====================================================
+
+REALISTIC TIMELINE
+
+Phase 1: 2 weeks
+Phase 2: 1–2 weeks
+Phase 3: 1–2 weeks
+
+Total: 4–6 weeks (high-quality pace)
+
+====================================================
+
+WHAT THIS PROJECT IS NOT
+
+Not a web service
+
+Not a distributed system
+
+Not MongoDB / InfluxDB based
+
+Not a beginner C exercise
+
+====================================================
+
+TARGET DOMAIN
+
+Systems Programming
+
+Embedded-level Architecture Thinking
+
+C Memory Management
+
+Deterministic Lifecycle Design
+
+Financial Engine Modeling
+
+====================================================
+
+PLANNED BUILD ENVIRONMENT
+
+Language: C (C17)
+
+UI: ncurses
+
+Database: SQLite
+
+Build System: Makefile
+
+OS: Linux (primary)
+
+====================================================
+
+FINAL DIRECTION (LOCKED)
+
+Target domain: Systems / Embedded-level C
+
+Database: SQLite (future integration)
+
+UI: ncurses
+
+Locking: Abstracted → SQLite transactional safety
