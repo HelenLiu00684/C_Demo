@@ -1,337 +1,181 @@
-Advanced Bank Engine
-Systems-Level Financial Engine in C
+# Bank Engine Demo (C)
 
-====================================================
+This project implements a small in-memory banking and asset trading engine written in C.
 
-OVERVIEW
+It is designed as a systems programming exercise focusing on:
 
-Advanced Bank Engine is a systems-level C project that implements a modular financial transaction engine with strict ownership-based memory management, deterministic lifecycle control, and layered architecture.
+- data modeling
+- modular architecture
+- memory-safe state management
+- transaction consistency
 
-This project demonstrates:
+The system simulates a simplified financial backend capable of processing different types of transactions and maintaining internal state for accounts and bank inventory.
 
-Structured C data modeling
+---
 
-Ownership-driven memory discipline
+# Features
 
-Dynamic container expansion strategy (80% rule)
+The engine currently supports the following operations:
 
-Transaction lifecycle tracking
+- Savings account transactions
+  - deposit
+  - withdraw
 
-Modular architecture design
+- Credit account transactions
+  - credit spend
+  - credit repay
 
-UI and business logic separation
+- Asset trading
+  - stock buy / sell
+  - fund buy / sell
 
-Persistence abstraction
+- Bank inventory management for assets
 
-Multi-user locking strategy planning
+- Transaction recording and history tracking
 
-This is NOT a web backend.
-This is a systems architecture demonstration project written in pure C.
+- JSON state export for external systems or monitoring tools
 
-====================================================
+All operations are executed in memory and validated through unit tests.
 
-ARCHITECTURE (LAYERED DESIGN)
+---
 
-UI Layer (ncurses) [Phase 2]
-↓
-Core Engine (Memory) [Phase 1]
-↓
-Persistence Interface [Phase 3]
-↓
-SQLite Implementation [Phase 3]
+# System Architecture
 
-The engine is completely independent of UI and database layers.
+The project follows a modular design.
+Bank
+└── Customer
+└── Account
+├── Savings / Credit
+└── Asset Accounts
+├── Stock positions
+└── Fund positions
+│
+Transaction Records
 
-====================================================
+Core processing is handled by the **engine module**, which coordinates account updates, bank inventory updates, and transaction creation.
 
-PHASE 1 — PURE C ENGINE (IN-MEMORY CLOSED LOOP)
+---
 
-Goal
-Build a deterministic, fully functional in-memory engine with strict lifecycle control.
+# Project Structure
+bank-engine-demo
+│
+├── include
+│ ├── account.h
+│ ├── transaction.h
+│ ├── inventory.h
+│ ├── bank.h
+│ ├── customer.h
+│ ├── symbolmap.h
+│ └── error.h
+│
+├── src
+│ ├── account.c
+│ ├── transaction.c
+│ ├── inventory.c
+│ ├── engine.c
+│ ├── bank.c
+│ ├── customer.c
+│ └── symbolmap.c
+│
+├── tests
+│ └── test_transaction.c
+│
+└── main.c
+---
 
-No GUI.
-No database.
-Optional transaction log print only.
+# Core Modules
 
-Core Engine Components
+### transaction
+Defines the transaction data model and creates transaction records.
 
-Bank struct (root owner)
+### account
+Manages account state including balances and asset positions.
 
-Customer dynamic array (80% expansion rule)
+### inventory
+Maintains bank inventory for available assets.
 
-Stock inventory pool
+### engine
+Implements the core business logic for executing transactions.
 
-Investment pool
+### symbolmap
+Maps asset symbols to asset types (stock or fund).
 
-Portfolio ownership model
+---
 
-Savings account
+# Build
 
-Credit card with limit enforcement
+Compile using GCC:
+gcc tests/test_transaction.c src/transaction.c -Iinclude -o tests/test_transaction
 
-Dynamic transaction log per customer
+Run unit tests:
+./test_transaction
+---
 
-Transaction Model
+# Unit Testing
 
-Each transaction includes:
+The project includes simple unit tests using `assert()`.
 
-Type
+Test coverage includes:
 
-Amount
+- valid savings and credit transactions
+- valid stock and fund trades
+- invalid parameters (amount, price, quantity)
+- invalid transaction types
+- symbol length validation
 
-Timestamp
+The tests are organized by logical groups:
+test_savings_credit_valid
+test_asset_valid
+test_savings_credit_invalid
+test_asset_invalid
 
-Description
+---
 
-Each customer owns:
+# JSON Output
 
-A dynamic transaction log
+The engine is designed to export internal system state in JSON format.  
+This allows integration with higher-level management systems.
 
-Trading / Validation Rules (inside engine)
+Example JSON output:
 
-Validate liquidity
+```json
+{
+  "account_id": 1023,
+  "type": "stock",
+  "symbol": "AAPL",
+  "quantity": 100,
+  "price": 180.25
+}
 
-Validate inventory
+Possible exported data includes:
 
-Validate lock period
+account balances
 
-Validate credit limit
+asset positions
 
-Unified error codes
+bank inventory
 
-Memory Discipline
+transaction history
+Purpose
 
-Clear ownership tree
+This project is part of a larger series of system-level programming demos focusing on:
 
-No leaks
+C data structure design
 
-No double free
+modular backend architecture
 
-Reverse-order cleanup
+financial transaction modeling
 
-Deterministic lifecycle control
+safe memory management
 
-Lock Abstraction (Interface Only)
+state serialization (JSON)
 
-Define lock interface for future multi-user support:
+Future extensions may include:
 
-lock_init()
-lock_acquire()
-lock_release()
-lock_destroy()
+integration testing
 
-Implementation may be dummy in Phase 1 (single-process mode).
+stress testing
 
-Deliverable
+additional system modules
 
-Clean CLI test version
-
-Fully working engine
-
-Stable lifecycle
-
-Deterministic behavior
-
-====================================================
-
-PHASE 2 — UI LAYER (NCURSES)
-
-Goal
-Add terminal UI without touching engine logic.
-
-Rules
-
-UI must not access internal structs directly
-
-UI calls only engine APIs
-
-All validation remains inside engine
-
-Error codes mapped to readable messages
-
-Features
-
-Menu navigation
-
-Customer selection
-
-Transaction execution
-
-Transaction history display
-
-Sync button (placeholder)
-
-Deliverable
-
-Interactive terminal system
-
-Clean separation of concerns
-
-====================================================
-
-PHASE 3 — PERSISTENCE + SQLITE INTEGRATION
-
-Goal
-Add database-backed persistence using a clean abstraction layer.
-
-Architecture
-
-UI
-↓
-Engine (Memory)
-↓
-Persistence Interface
-↓
-SQLite Implementation
-
-Startup Flow
-
-Connect database
-
-Load customers
-
-Load inventories
-
-Load transactions
-
-Build memory state
-
-Sync Flow
-
-Begin transaction
-
-Serialize memory state
-
-Update database
-
-Commit transaction
-
-Locking Strategy
-
-Level 1: In-Process (Optional)
-
-pthread mutex
-
-Level 2: Multi-Process (Real Lock)
-
-SQLite transactions
-
-Optional file locking if required
-
-SQLite provides safe concurrent access through transactional locking.
-
-====================================================
-
-MULTI-USER STRATEGY (FINAL MODEL)
-
-In-memory
-
-Optional mutex for thread safety
-
-Database
-
-Use SQLite transactional locking
-
-Avoid manual low-level file locking
-
-Engine remains unaware of database details.
-
-====================================================
-
-COMPLEXITY CONTROL STRATEGY
-
-Do NOT combine phases.
-
-Correct development order:
-
-Memory engine stable
-
-UI integration
-
-Database persistence
-
-Locking reinforcement
-
-====================================================
-
-ENGINEERING PRINCIPLES DEMONSTRATED
-
-Structured C modular design
-
-Ownership-based lifecycle control
-
-Dynamic container expansion strategy (80% rule)
-
-Constraint-driven transaction engine
-
-Inventory consistency enforcement
-
-Time-based validation
-
-Separation of UI and business logic
-
-Persistence abstraction
-
-Locking strategy planning
-
-====================================================
-
-REALISTIC TIMELINE
-
-Phase 1: 2 weeks
-Phase 2: 1–2 weeks
-Phase 3: 1–2 weeks
-
-Total: 4–6 weeks (high-quality pace)
-
-====================================================
-
-WHAT THIS PROJECT IS NOT
-
-Not a web service
-
-Not a distributed system
-
-Not MongoDB / InfluxDB based
-
-Not a beginner C exercise
-
-====================================================
-
-TARGET DOMAIN
-
-Systems Programming
-
-Embedded-level Architecture Thinking
-
-C Memory Management
-
-Deterministic Lifecycle Design
-
-Financial Engine Modeling
-
-====================================================
-
-PLANNED BUILD ENVIRONMENT
-
-Language: C (C17)
-
-UI: ncurses
-
-Database: SQLite
-
-Build System: Makefile
-
-OS: Linux (primary)
-
-====================================================
-
-FINAL DIRECTION (LOCKED)
-
-Target domain: Systems / Embedded-level C
-
-Database: SQLite (future integration)
-
-UI: ncurses
-
-Locking: Abstracted → SQLite transactional safety
+telemetry or monitoring interfaces
