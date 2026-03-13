@@ -1,111 +1,56 @@
-#include <transaction.h>
-#include <error.h>
-#include <time.h>
-ErrorCode transaction_create(Transaction *tx,unsigned long id,TransactionType type,double price,double quantity,double amount,const char *symbol){
-    if (tx == NULL)
-        return ERROR_INVLID_POINTER;
-    tx->timestamp = time(NULL);
-    tx->id = id;
-    tx->quantity = quantity;
-    if (tx->type == DEPOSIT ||
-        tx->type == WITHDRAW ||
-        tx->type == CREDIT_SPEND ||
-        tx->type == CREDIT_REPAY){
-            if (amount <= 0)
-            return ERROR_INVALID_ARGUMENT;
-            tx->amount = amount;
-            tx->symbol[0] = '\0';
-            tx->price = 0;
-            tx->quantity = 0;
-        }
+/*
+Transaction Implementation
 
-    else if (tx->type == STOCK_BUY ||
-        tx->type == STOCK_SELL ||
-        tx->type == FUND_BUY ||
-        tx->type == FUND_SELL ){
-        if (amount != 0 || price <= 0 || quantity <=0)
-          return ERROR_INVALID_ARGUMENT;
-        tx->amount = price * quantity;
-        if (symbol == NULL)
+Implements functions to create two types of transaction:
+Savings/Credit or Stock/Fund.
+
+*/
+#include "transaction.h"
+#include "error.h"
+#include <time.h>
+#include <string.h>
+/*Generate a global transaction ID*/
+static unsigned long next_tx_id = 202603060001;
+/* Create a savings or credit transaction */
+ErrorCode transaction_saving_credit_create(Transaction *tx,TransactionType type,double amount){
+        if (tx == NULL)
+            return ERROR_INVALID_POINTER;
+        if (amount <= 0)
             return ERROR_INVALID_ARGUMENT;
-        if(strlen(symbol)>=sizeof(tx->symbol))
-            return ERROR_INVALID_ARGUMENT;
-        strncpy(tx->symbol,symbol,sizeof(tx->symbol)-1); //copy string array to an array and set the last char = '\0'
-        tx->symbol[sizeof(tx->symbol)-1]='\0';        
-    }else
+        if (type != DEPOSIT &&
+            type != WITHDRAW &&
+            type != CREDIT_SPEND &&
+            type != CREDIT_REPAY )
+            return ERROR_INVALID_TRANSCATION_TYPE;
+        tx->timestamp = time(NULL);
+        tx->id = next_tx_id++;
+        tx->type = type;
+        tx->data.savings_credit.amount = amount;
+  
+        return ERROR_OK;
+    }
+/* Create a stock or fund transaction */
+ErrorCode transaction_stock_fund_create(Transaction *tx,TransactionType type,double price,int quantity,const char *symbol){
+    if (tx == NULL)
+        return ERROR_INVALID_POINTER;
+    if (price <= 0 || quantity <=0)
         return ERROR_INVALID_ARGUMENT;
+    if (symbol == NULL)
+        return ERROR_INVALID_ARGUMENT;
+    if(strlen(symbol)>=sizeof(tx->data.asset.symbol))
+        return ERROR_INVALID_ARGUMENT;
+    if (type != STOCK_BUY &&
+        type != STOCK_SELL &&
+        type != FUND_BUY &&
+        type != FUND_SELL )
+        return ERROR_INVALID_TRANSCATION_TYPE;
+    tx->timestamp = time(NULL);
+    tx->id = next_tx_id++;
+    tx->data.asset.quantity = quantity;
+    tx->data.asset.price = price;
+    tx->type = type;
+    strncpy(tx->data.asset.symbol,symbol,sizeof(tx->data.asset.symbol)-1); //copy string array to an array and set the last char = '\0'
+    tx->data.asset.symbol[sizeof(tx->data.asset.symbol)-1]='\0';        
     return ERROR_OK;
 
 };
-/*
- * -------------------------------------------------------------
- * Cash & Credit Transaction Constraints
- * -------------------------------------------------------------
- *
- * Applies to:
- *   TX_DEPOSIT
- *   TX_WITHDRAW
- *   TX_CREDIT_SPEND
- *   TX_CREDIT_REPAY
- *
- * Rules:
- *
- * 1. `amount` must be strictly greater than 0.
- *    Transaction direction is determined by `type`,
- *    not by negative values.
- *
- * 2. `price` must be 0.
- *
- * 3. `quantity` must be 0.
- *
- * 4. `symbol` must be an empty string.
- *
- * 5. `amount` is provided by the caller and is treated
- *    as the single source of truth.
- *
- * 6. No asset-related fields are valid for cash/credit transactions.
- *
- * Rationale:
- *   Cash-based transactions represent direct monetary flows.
- *   They are not tied to any tradable asset and therefore
- *   must not contain asset metadata.
- *
- * -------------------------------------------------------------
- */
-/*
- * -------------------------------------------------------------
- * Stock & Investment Transaction Constraints
- * -------------------------------------------------------------
- *
- * Applies to:
- *   TX_STOCK_BUY
- *   TX_STOCK_SELL
- *   TX_FUND_BUY
- *   TX_FUND_SELL
- *
- * Rules:
- *
- * 1. `symbol` must not be NULL.
- *
- * 2. `symbol` length must be strictly less than
- *    sizeof(tx->symbol).
- *
- * 3. `price` must be strictly greater than 0.
- *
- * 4. `quantity` must be strictly greater than 0.
- *
- * 5. `amount` must be 0 when passed to the function.
- *    The actual transaction amount is internally computed as:
- *
- *        amount = price * quantity
- *
- * 6. `amount` derived from price and quantity is treated
- *    as the single source of truth.
- *
- * Rationale:
- *   Asset-based transactions are tied to tradable instruments.
- *   The transaction value must be derived from asset price and
- *   quantity to prevent inconsistencies or tampering.
- *
- * -------------------------------------------------------------
- */
