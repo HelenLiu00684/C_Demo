@@ -1,7 +1,6 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 #include "transaction.h"
-
 #include <stddef.h> 
 typedef struct{
     char symbol[16];
