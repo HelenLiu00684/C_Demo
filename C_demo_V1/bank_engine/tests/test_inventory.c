@@ -24,7 +24,7 @@ int main() {
     RUN_TEST(test_inventory_add_position);
     RUN_TEST(test_inventory_buy_position);
     RUN_TEST(test_inventory_sell_position);
-    printf("\nAll symbolmap unit tests passed.\n");
+    printf("\nAll inventory unit tests passed.\n");
 }
 static void test_inventory_init(){
     BankInventory invObj;

@@ -4,41 +4,50 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#define initial_size 16
 #define capacity_size 20
 static ErrorCode expand_transactions(Account* account);
 static int find_position(AssetAccount *asset, const char *symbol);
 static ErrorCode expand_positions(AssetAccount *asset);
-
+/* Initialize the account based on accoutType only.*/
 ErrorCode account_init(Account *account, AccountType type){
+    ErrorCode err;
     if(account == NULL)
-        return ERROR_INVALID_POINTER;
+        return  ERROR_INVALID_ARGUMENT;
     account->type = type;
     account->tx = NULL;
     account->tx_capacity = 0;
     account->tx_count = 0;
     switch(type){
-        case Account_Savings: account->data.savings.balance = 0;break;
+        case Account_Savings: 
+            account->data.savings.balance = 0;
+
+            break;
         case Account_Credit: 
             account->data.credit.credit_limit = 0;
             account->data.credit.credit_used = 0;
+
             break;
         case Account_Stock: 
             account->data.stock.ptrPos = NULL;
             account->data.stock.capacity = 0;
             account->data.stock.count = 0;
+
             break;
         case Account_Fund: 
             account->data.fund.ptrPos = NULL;
             account->data.fund.capacity = 0;
             account->data.fund.count = 0;
+
             break;
     }
+
+
     return ERROR_OK;    
 }
-
-ErrorCode account_destroy(Account* account){
-    if (account == NULL) return ERROR_INVALID_POINTER;
+/* Destory the account */
+ErrorCode account_free(Account* account){
+    if (account == NULL) 
+        return ERROR_INVALID_POINTER;
 
     free(account->tx);
     
@@ -49,10 +58,9 @@ ErrorCode account_destroy(Account* account){
         free (account->data.fund.ptrPos);
     }
 
-    
     return ERROR_OK;
 }
-
+/* ADD the transaction under the account when capacity is insufficient */
 ErrorCode account_append_transaction(Account* account, const Transaction* tx){
     if(account==NULL||tx==NULL) return ERROR_INVALID_POINTER;
     ErrorCode returnCode = expand_transactions(account);
@@ -64,10 +72,10 @@ ErrorCode account_append_transaction(Account* account, const Transaction* tx){
     
     return ERROR_OK;
 }
-
+/* Expand the transaction array when capacity is insufficient */
 static ErrorCode expand_transactions(Account* account){
     if(account->tx_capacity == 0){
-        account->tx = malloc(initial_size*sizeof(Transaction));
+        account->tx = malloc(capacity_size*sizeof(Transaction));
         if(account->tx == NULL)
             return ERROR_MEMORY_REALLOCATE;
         account->tx_capacity = capacity_size;
@@ -102,12 +110,13 @@ static int find_position(AssetAccount *asset, const char *symbol){
     }
     return -1; 
 }
+/* Add one item to the stock or fund account, don't need input price, just created.*/
+ErrorCode account_add_position(Account *account, const char *symbol,int quantity){
+    if(account == NULL || symbol ==NULL || quantity <= 0)
+        return ERROR_INVALID_ARGUMENT;
 
-ErrorCode account_add_position(Account *account, const char *symbol,double quantity){
-    if(account == NULL || symbol ==NULL)
-        return ERROR_INVALID_POINTER;
-
-    AssetAccount *asset=NULL;
+    AssetAccount *asset = NULL;
+ 
     if (account->type == Account_Stock) 
         asset = &account->data.stock;
     else if (account->type == Account_Fund)
@@ -118,10 +127,11 @@ ErrorCode account_add_position(Account *account, const char *symbol,double quant
     if(asset->count*10>=asset->capacity*8){
         ErrorCode err = expand_positions(asset);
         if (err !=ERROR_OK)
-            return ERROR_EXPAND_FAILED;
+            return err;
     }
 
-    int pos = account_find_position(account, symbol);
+    int pos = -1;
+    pos = account_find_position(account, symbol);
     if (pos !=-1){
         return ERROR_ALREADY_EXISTS;
     }
@@ -136,7 +146,7 @@ ErrorCode account_add_position(Account *account, const char *symbol,double quant
 /* Expand the position array when capacity is insufficient */
 static ErrorCode expand_positions(AssetAccount *asset){
     if(asset->capacity == 0){
-        Position* tmpptr = malloc(initial_size * sizeof(Position));
+        Position* tmpptr = malloc(capacity_size * sizeof(Position));
         if(tmpptr == NULL)
             return ERROR_MEMORY_REALLOCATE;
         asset->capacity = capacity_size;
@@ -153,62 +163,71 @@ static ErrorCode expand_positions(AssetAccount *asset){
     return ERROR_OK;
 }
 /*
-find index
-        ↓
-if -1 → add_position
-        ↓
-get asset
-        ↓
-new_quantity = old + delta
-        ↓
->0 → update
-<0 → error
-==0 → remove
+Sell or Buy a asset and update the quantity in fund or stock.
+1.find the index of symbol
+2.if index = -1 invoke add_position to create a position in asset structures.
+3.if index != -1 new_quantity = old + delta
+new_quantity:
+    >0 → update
+    <0 → error
+    ==0 → remove
 */
-ErrorCode account_update_position(Account *account,const char *symbol,double quantity){ //the quantity can be +/-
-    if(account == NULL || symbol ==NULL)
-        return ERROR_INVALID_POINTER;
+ErrorCode account_update_position(Account *account,const char *symbol,int quantity){ //the quantity can be +/-
+    double new_quantity= 0 ;
+    if(account == NULL || symbol ==NULL||quantity == 0 )
+        return ERROR_INVALID_ARGUMENT;
     int index = account_find_position(account, symbol);
     AssetAccount *asset = NULL;
     if (account->type == Account_Stock)
         asset = &account->data.stock;
     else if (account->type == Account_Fund)
         asset = &account->data.fund;
-    else ERROR_INVALID_TYPE;
+    else return ERROR_INVALID_TYPE;
 
-    if (index == -1) {
-        if (quantity <= 0)
-            return ERROR_INVALID_ARGUMENT;
+    if (index == -1 && quantity > 0) {
         return account_add_position(account, symbol, quantity);// This symbol hasn't exist in 
+    }else if (index == -1 && quantity < 0){
+        return ERROR_INVLID_ACCOUNT_UPDATE;
     }
-        
-        //double temp_quantity = fabs(quantity); // ignore the postive or negtive
-    if (asset->ptrPos[index].quantity + quantity > 0){// Number is reasonable, the quantity will be changed
-        asset->ptrPos[index].quantity = asset->ptrPos[index].quantity + quantity;//change the quantity
+    new_quantity = asset->ptrPos[index].quantity + quantity;
+    if (new_quantity >0 ){// Number is reasonable, the quantity will be changed
+        asset->ptrPos[index].quantity = new_quantity;//change the quantity
         return ERROR_OK;
     }
-    else if (asset->ptrPos[index].quantity + quantity < 0){
-        return ERROR_INVALID_ARGUMENT;
+    else if (new_quantity < 0){
+        return ERROR_INSUFFENT_ACCOUNT_QUANTITY;
     }else{
         for(int i=index; i<asset->count-1; i++){
             asset->ptrPos[i]=asset->ptrPos[i+1];//decrease the item and arrange the access_list
         }            
         asset->count--;//the total number reduce 
-    }
-            
-    
+    }            
     return ERROR_OK;
-
 }
-
-ErrorCode account_update_saving_credit(Account *account,double price){
-    if(account == NULL || price ==0)
+/* Update the money business money and credit card */
+ErrorCode account_update_saving_credit(Account *account,double amount){
+    if(account == NULL || amount ==0)
         return ERROR_INVALID_POINTER;
     if (account->type == Account_Savings) 
-        account->data.savings.balance = account->data.savings.balance + price;
+        account->data.savings.balance = account->data.savings.balance + amount;
     else{
-        account->data.credit.credit_used = account->data.credit.credit_used + price;
-        account->data.credit.credit_limit = account->data.credit.credit_limit - price;
+        account->data.credit.credit_used = account->data.credit.credit_used + amount;
+        account->data.credit.credit_limit = account->data.credit.credit_limit - amount;
     }
+    return ERROR_OK;
+}
+
+/*Update the avg_cost when account buy or sell asset, Engine will calculate the avg_cost.*/
+ErrorCode account_set_avg_cost(Account *account, const char *symbol, double avg_cost){
+    if(account == NULL || symbol == NULL || avg_cost == 0)
+        return ERROR_INVALID_ARGUMENT;
+    int index = -1;
+    index = account_find_position(account, symbol);
+    AssetAccount asset;
+    if(account->type == Account_Stock)
+        asset = account->data.stock;
+    else if(account->type == Account_Fund)
+        asset = account->data.fund;
+    asset.ptrPos[index].avg_cost = avg_cost;
     return ERROR_OK;
 }

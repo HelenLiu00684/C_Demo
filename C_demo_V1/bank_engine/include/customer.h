@@ -13,5 +13,6 @@ ErrorCode customer_init(Customer *customerPtr,const char *name,const char *phone
 ErrorCode customer_destroy(Customer *customerPtr);
 ErrorCode customer_add_account(Customer *customerPtr,AccountType type);
 ErrorCode customer_remove_account(Customer *customerPtr,AccountType type);
+int customer_find_account(Customer *customerPtr, AccountType type);
 void print_account_type(void);
 #endif 

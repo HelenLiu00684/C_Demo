@@ -6,7 +6,31 @@
 #include "bank.h"
 #include <stdlib.h>
 
-                                   
+double calculate_new_avg(Bank *bank,const char *customerName,const char *customerPhone,const char *symbol,int quantityNew,double costNew){
+    if(account == NULL || symbol == NULL || quan_num == 0 || price == 0)
+        return  ERROR_INVALID_ARGUMENT;
+    int exit_quantity = 0;
+    double exit_avg_cost = 0;
+    int index_customer=bank_find_customer(bankPtr, customerName, customerPhone);
+    SymbolType symboltype = symbol_lookup(symbol);
+    AccountType accounttype = NULL;
+    AssetAccount assetaccount;
+    if (symboltype == Symbol_Stock)
+        assetaccount = stock;
+        accounttype = Account_Stock;
+    else if (symboltype == Symbol_Fund)
+        assetaccount = fund;
+        accounttype = Account_Fund;
+    else 
+        return -1;
+    int index_account = customer_find_account(bank->customerPtr,accounttype);
+    int index_position = account_find_position(&bank->ptrCustomer[index_customer]->accounts[index_account],symbol);
+    exit_quantity = bank->ptrCustomer[index_customer]->accounts[index_account]->data.assetaccount->ptrPos[index_position].quantity;
+    exit_avg_cost = bank->ptrCustomer[index_customer]->accounts[index_account]->data.assetaccount->ptrPos[index_position].avg_cost;
+    double total_cost = exit_quantity * exit_avg_cost + quantityNew * costNew;
+    return (total_cost/(exit_quantity + quantityNew));
+}
+
 ErrorCode apply_stockfund_operation(Bank *bank,Account * account,const char *symbol,int quan_num,double price){
         //1.confirm the parameter is valid
 

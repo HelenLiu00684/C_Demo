@@ -4,8 +4,8 @@
 #include <stddef.h> 
 typedef struct{
     char symbol[16];
-    double quantity;//User holding
-
+    int quantity;   //User holding quantity
+    double avg_cost;   //The average price of each Position
 }Position;
 
 typedef struct{
@@ -40,11 +40,21 @@ typedef struct{
         AssetAccount fund;
     } data;
 }Account;
+/* Initialize the account based on accoutType only.*/
 ErrorCode account_init(Account *acc, AccountType type);
+/* Search for a symbol inside an AssetAccount and return its index, or -1 if not found. BUY
+SELL/UPDATE/DELETE/QUER*/
 int account_find_position(Account *account, const char *symbol);
-ErrorCode account_destroy(Account* acc);
+/* Destory the account */
+ErrorCode account_free(Account* acc);
+/* ADD the transaction under the account when capacity is insufficient */
 ErrorCode account_append_transaction(Account* acc, const Transaction* tx);
-ErrorCode account_add_position(Account *account, const char *symbol,double quantity);
-ErrorCode account_update_position(Account *account,const char *symbol,double quantity);
+/* Add one item to the stock or fund account, don't need input price, just created.*/
+ErrorCode account_add_position(Account *account, const char *symbol,int quantity);
+/*Sell or Buy a asset and update the quantity in fund or stock.*/
+ErrorCode account_update_position(Account *account,const char *symbol,int quantity);
+/* Update the money business money and credit card */
 ErrorCode account_update_saving_credit(Account *account,double price);
+
+
 #endif 
