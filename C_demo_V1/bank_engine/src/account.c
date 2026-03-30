@@ -4,10 +4,13 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#define capacity_size 20
+#include <stdio.h>
+
 static ErrorCode expand_transactions(Account* account);
 static int find_position(AssetAccount *asset, const char *symbol);
 static ErrorCode expand_positions(AssetAccount *asset);
+
+void print_account(Account *account);
 /* Initialize the account based on accoutType only.*/
 ErrorCode account_init(Account *account, AccountType type){
     ErrorCode err;
@@ -23,7 +26,7 @@ ErrorCode account_init(Account *account, AccountType type){
 
             break;
         case Account_Credit: 
-            account->data.credit.credit_limit = 0;
+            account->data.credit.credit_limit = CREDIT_INIT_LIMIT;
             account->data.credit.credit_used = 0;
 
             break;
@@ -139,6 +142,7 @@ ErrorCode account_add_position(Account *account, const char *symbol,int quantity
     strncpy(asset->ptrPos[asset->count].symbol, symbol, sizeof(asset->ptrPos[asset->count].symbol)-1);
     asset->ptrPos[asset->count].symbol[sizeof(asset->ptrPos[asset->count].symbol)-1]='\0';
     asset->ptrPos[asset->count].quantity = quantity;
+    asset->ptrPos[asset->count].avg_cost = 0;
     asset->count++;
     return ERROR_OK;    
 }        
@@ -187,7 +191,7 @@ ErrorCode account_update_position(Account *account,const char *symbol,int quanti
     if (index == -1 && quantity > 0) {
         return account_add_position(account, symbol, quantity);// This symbol hasn't exist in 
     }else if (index == -1 && quantity < 0){
-        return ERROR_INVLID_ACCOUNT_UPDATE;
+        return ERROR_INVALID_ACCOUNT_UPDATE;
     }
     new_quantity = asset->ptrPos[index].quantity + quantity;
     if (new_quantity >0 ){// Number is reasonable, the quantity will be changed
@@ -208,26 +212,152 @@ ErrorCode account_update_position(Account *account,const char *symbol,int quanti
 ErrorCode account_update_saving_credit(Account *account,double amount){
     if(account == NULL || amount ==0)
         return ERROR_INVALID_POINTER;
-    if (account->type == Account_Savings) 
-        account->data.savings.balance = account->data.savings.balance + amount;
+    double balance = 0;
+    double credit_used = 0;
+    double credit_limit = 0;
+    if (account->type == Account_Savings){
+        balance = account->data.savings.balance + amount;
+        if(balance> 0){
+            account->data.savings.balance = balance;
+        }else{
+            return ERROR_INSUFFICIENT_SAVING;
+        }
+    }         
     else{
-        account->data.credit.credit_used = account->data.credit.credit_used + amount;
-        account->data.credit.credit_limit = account->data.credit.credit_limit - amount;
+        credit_used = account->data.credit.credit_used + amount;
+        credit_limit = CREDIT_INIT_LIMIT - account->data.credit.credit_used - amount;
+        if(credit_limit >= 0){
+            account->data.credit.credit_used = credit_used;
+            account->data.credit.credit_limit = credit_limit;
+        }else{
+            return  ERROR_EXCEED_CREDIT_LIMITATION;
+        }
     }
     return ERROR_OK;
 }
 
 /*Update the avg_cost when account buy or sell asset, Engine will calculate the avg_cost.*/
 ErrorCode account_set_avg_cost(Account *account, const char *symbol, double avg_cost){
-    if(account == NULL || symbol == NULL || avg_cost == 0)
+    if(account == NULL || symbol == NULL|| avg_cost<=0)
         return ERROR_INVALID_ARGUMENT;
     int index = -1;
     index = account_find_position(account, symbol);
-    AssetAccount asset;
+    if(index==-1){
+        return ERROR_INVALID_ACCOUNT_UPDATE;
+    }
+    AssetAccount *assetPtr=NULL;
     if(account->type == Account_Stock)
-        asset = account->data.stock;
+        assetPtr = &account->data.stock;
     else if(account->type == Account_Fund)
-        asset = account->data.fund;
-    asset.ptrPos[index].avg_cost = avg_cost;
+        assetPtr = &account->data.fund;
+    assetPtr->ptrPos[index].avg_cost = avg_cost;
     return ERROR_OK;
+}
+
+void asset_SF_print(AssetAccount *assetObjPtr,int max_count){
+    int count = -1;
+    if(max_count == -1){
+        count =(int)(assetObjPtr->count);
+    }else{
+        count = max_count;
+    }
+/*print out the list of asset:
+    // for(int i=0;i<count;i++){
+    //     printf(
+    //             "Asset_Id:%d\n"
+    //             "  symbol : %s\n"
+    //             "  quantity : %d\n"
+    //             "  avg_cost   : %.2f\n",
+    //             i,
+    //             assetObjPtr->ptrPos[i].symbol,
+    //             assetObjPtr->ptrPos[i].quantity,
+    //             assetObjPtr->ptrPos[i].avg_cost
+    //         );
+            
+    //     }
+*/
+
+    /*print out the last fo the list of asset:*/
+
+         printf(
+                 "Asset_Id:%d\n"
+                 "  symbol : %s\n"
+                 "  quantity : %d\n"
+                 "  avg_cost   : %.2f\n",
+                 count-1,
+                 assetObjPtr->ptrPos[count-1].symbol,
+                 assetObjPtr->ptrPos[count-1].quantity,
+                 assetObjPtr->ptrPos[count-1].avg_cost
+             );
+            
+
+}
+void print_account(Account *account){
+    printf("**********************************************************************************\n");
+    switch(account->type){
+        case Account_Savings: 
+            // account->data.savings.balance = 0;
+            printf(
+                "Account:\n"
+                "   Type     : %s\n"
+                "       Balance     : %.2f\n"
+                "       TX_count : %ld\n"
+                "       TX_capacity   : %ld\n",
+                "Savings",
+                account->data.savings.balance,
+                account->tx_count,
+                account->tx_capacity
+            );
+            break;
+        case Account_Credit: 
+            account->data.credit.credit_limit = CREDIT_INIT_LIMIT;
+            // account->data.credit.credit_used = 0;
+            printf(
+                "Account:\n"
+                "  Type     : %s\n"
+                "       Credit_Limit     : %.2f\n"
+                "       Credit_Used     : %.2f\n"
+                "       TX_count : %ld\n"
+                "       TX_capacity   : %ld\n",
+                "Credits",
+                account->data.credit.credit_limit,
+                account->data.credit.credit_used,
+                account->tx_count,
+                account->tx_capacity
+            );
+            break;
+        case Account_Stock: 
+            // account->data.stock.ptrPos = NULL;
+            // account->data.stock.capacity = 0;
+            // account->data.stock.count = 0;
+            printf(
+                "Account:\n"
+                "   Type     : %s\n"
+                "       Stock_count : %ld\n"
+                "       Stock_capacity   : %ld\n",
+                "Stock",
+                account->data.stock.count,
+                account->data.stock.capacity
+            );
+            asset_SF_print(&account->data.stock,(&account->data.stock)->count);
+            break;
+        case Account_Fund: 
+            // account->data.fund.ptrPos = NULL;
+            // account->data.fund.capacity = 0;
+            // account->data.fund.count = 0;
+            printf(
+                "Account:\n"
+                "   Type     : %s\n"
+                "       Fund_count : %ld\n"
+                "       Fund_capacity   : %ld\n",
+                "Fund",
+                account->data.fund.count,
+                account->data.fund.capacity
+            );
+            asset_SF_print(&account->data.fund,(&account->data.fund)->count);
+            break;
+
+    }
+    // printf("##################################################################################\n");
+
 }

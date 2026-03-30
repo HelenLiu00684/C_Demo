@@ -9,8 +9,10 @@ Savings/Credit or Stock/Fund.
 #include "error.h"
 #include <time.h>
 #include <string.h>
+#include <stdio.h>
 /*Generate a global transaction ID*/
 static unsigned long next_tx_id = 202603060001;
+
 /* Create a savings or credit transaction */
 ErrorCode transaction_saving_credit_create(Transaction *tx,TransactionType type,double amount){
         if (tx == NULL)
@@ -54,3 +56,63 @@ ErrorCode transaction_stock_fund_create(Transaction *tx,TransactionType type,dou
     return ERROR_OK;
 
 };
+
+
+void transaction_print(Transaction *txPtr){
+    TransactionType type=txPtr->type;
+    const char *typeexpr;
+    if(type == DEPOSIT ||type == WITHDRAW ||type == CREDIT_SPEND ||type == CREDIT_REPAY ){
+        switch(type){
+            case DEPOSIT:
+                typeexpr = "Deposit";
+                break;
+            case WITHDRAW:
+                typeexpr = "Withdraw";
+                break;
+            case CREDIT_SPEND:
+                typeexpr = "Credit_Spend";
+                break;
+            case CREDIT_REPAY:
+                typeexpr = "Credit_Repay";
+                break;
+        }
+
+    // printf("##################################################################################\n");
+
+        printf(
+            "       Transaction:\n"
+            "           Type     : %s\n"
+            "           Amount     : %.2f\n",
+            typeexpr,
+            txPtr->data.savings_credit.amount
+        );
+    }else if(type == STOCK_BUY ||type == STOCK_SELL ||type == FUND_BUY ||type == FUND_SELL){
+        switch(type){
+            case STOCK_BUY:
+                typeexpr = "Stock_Buy";
+                break;
+            case STOCK_SELL:
+                typeexpr = "Stock_Sell";
+                break;
+            case FUND_BUY:
+                typeexpr = "Fund_Buy";
+                break;
+            case FUND_SELL:
+                typeexpr = "Fund_Sell";
+                break;
+        }
+    // printf("##################################################################################\n");
+
+        printf(
+        "   Transaction:\n"
+        "       Type     : %s\n"
+        "       Cost     : %.2f\n"
+        "       Quantity : %d\n"
+        "       Symbol   : %s\n",
+        typeexpr,
+        txPtr->data.asset.price,
+        txPtr->data.asset.quantity,
+        txPtr->data.asset.symbol
+        );
+    }
+}

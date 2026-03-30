@@ -2,6 +2,8 @@
 #define ACCOUNT_H
 #include "transaction.h"
 #include <stddef.h> 
+#define capacity_size 20
+#define CREDIT_INIT_LIMIT 5000
 typedef struct{
     char symbol[16];
     int quantity;   //User holding quantity
@@ -55,6 +57,8 @@ ErrorCode account_add_position(Account *account, const char *symbol,int quantity
 ErrorCode account_update_position(Account *account,const char *symbol,int quantity);
 /* Update the money business money and credit card */
 ErrorCode account_update_saving_credit(Account *account,double price);
-
-
+/* Set the avg_cost for the assets */
+ErrorCode account_set_avg_cost(Account *account, const char *symbol, double avg_cost);
+void print_account(Account *account);
+void asset_SF_print(AssetAccount *assetObjPtr,int max_count);
 #endif 

@@ -48,5 +48,6 @@ typedef struct{
 ErrorCode transaction_saving_credit_create(Transaction *tx,TransactionType type,double price);
 /*Declares transaction of stock and fund functions*/
 ErrorCode transaction_stock_fund_create(Transaction *tx,TransactionType type,double price,int quantity,const char *symbol);
-
+/*Print out the transaction*/
+void transaction_print(Transaction *txPtr);
 #endif

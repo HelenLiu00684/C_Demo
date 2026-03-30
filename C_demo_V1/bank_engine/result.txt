@@ -1,0 +1,82 @@
+************************************************
+Testing Unit test_account_init has begin......
+[INFO]test_account_init_Saving passed.
+[INFO]test_account_init_Credit passed.
+[INFO]test_account_init_Stcok passed.
+[INFO]test_account_init_Fund passed.
+[INFO]test_account_init_Missing_Argument passed.
+Testing Unit test_account_init has finish...... 
+************************************************
+************************************************
+Testing Unit test_account_add_position has begin......
+DEBUG after add account type 2
+DEBUG after add account symbol AAAB
+DEBUG after add account asset quantity 100
+DEBUG after add account asset count 1
+[INFO]test_account_add_one item passed.
+DEBUG after add account count 2
+DEBUG after add another account symbol  AAAB
+DEBUG after add account asset quantity 100
+DEBUG after add another account symbol  BBBC
+DEBUG after add account asset quantity 200
+[INFO]test_account_add_other item passed.
+DEBUG after add account count 2
+[INFO]test_account_add_duplicated item passed.
+[INFO]test_account_add_parameter_quanity passed.
+[DEBUG] expand: new capacity = 80
+[INFO]test_account_extend invalid passed.
+Testing Unit test_account_add_position has finish...... 
+************************************************
+************************************************
+Testing Unit test_account_update_position has begin......
+[DEBUG] Initial: initial count = 0
+[DEBUG] New First Item: New count = 1
+[DEBUG] New First Item: New symbol = AAAB
+[INFO]test_account_update buy a new item passed.
+[DEBUG] Buy an existing Item: count = 1
+[DEBUG] Buy an existing Item: symbol = AAAB
+[DEBUG] Buy an existing Item: quantity = 300
+[INFO]test_account_update normal update buy passed.
+[DEBUG] Buy an existing Item: count = 1
+[DEBUG] Buy an existing Item: symbol = AAAB
+[DEBUG] Buy an existing Item: quantity = 150
+[INFO]test_account_update normal update sell passed.
+[DEBUG] Buy an existing Item: count = 1
+[DEBUG] Buy an existing Item: symbol = AAAB
+[DEBUG] Buy an existing Item: quantity = 400
+[INFO]test_account_update normal update  buy duplicate passed.
+[DEBUG] Sell an existing Item >0: count = 3
+[DEBUG] Sell an existing Item >0: symbol = BBBC
+[DEBUG] Sell an existing Item >0: quantity = 400
+[INFO]test_account_update normal update sell duplicate > 0 passed.
+[DEBUG] Sell an existing Item finial quantity == 0,How many item in the List: count = 2
+[DEBUG] Sell an existing Item finial quantity == 0,The first item is : symbol = AAAB
+[DEBUG] Sell an existing Item finial quantity == 0,The last item is: symbol = CCCD
+[DEBUG] Sell an existing Item finial quantity == 0,The last item is: quantity = 350
+[INFO]test_account_update normal update sell duplicate = 0 passed.
+[DEBUG] Sell an existing Item finial quantity < 0,How many item in the List: count = 3
+[DEBUG] Sell an existing Item finial quantity < 0,The last item is: symbol = CCCD
+[DEBUG] Sell an existing Item finial quantity < 0,The last item is: quantity = 350
+[INFO]test_account_update normal update sell duplicate < 0 passed.
+[INFO]test_account_update normal update sell a no-existing item passed.
+[INFO]test_account_parameter_quanity passed.
+Testing Unit test_account_update_position has finish...... 
+************************************************
+************************************************
+Testing Unit test_account_find_position has begin......
+[DEBUG] Initial: initial count = 0
+[DEBUG] Initial: initial count = 0
+[DEBUG] After Initial: initial count = 5
+[DEBUG] After Initial: initial count = 3
+[INFO]test_account_find_position from Stock Listpassed.
+[INFO]test_account_find_position from Fund Listpassed.
+[INFO] The current id is :0, and the name is :AAAB
+[INFO] The current id is :1, and the name is :BBBC
+[INFO] The current id is :2, and the name is :CCCD
+[INFO] The current id is :3, and the name is :DDDE
+[INFO] The current id is :4, and the name is :EEEF
+[INFO]test_account_find_position from Stock Listpassed.
+[INFO] The current id is :0, and the name is :ABBB
+[INFO] The current id is :1, and the name is :BCCC
+[INFO] The current id is :2, and the name is :CDDD
+[INFO]test_account_find_positi
