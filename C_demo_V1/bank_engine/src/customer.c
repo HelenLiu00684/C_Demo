@@ -7,7 +7,7 @@
 #include <time.h>
 #define MAX_COUNT_TYPE 4
 static unsigned long customer_id_default = 100001;
-//bankPtr is a static build in main
+
 
 
 ErrorCode customer_init(Customer *customerPtr,const char *name,const char *phone){
@@ -45,14 +45,12 @@ int customer_find_account(const Customer *customerPtr,AccountType type){
 ErrorCode customer_add_account(Customer *customerPtr,AccountType type){
     if (customerPtr==NULL) return ERROR_INVALID_ARGUMENT;
     int customer_find_index = customer_find_account(customerPtr,type);
-    if (customer_find_index !=-1) return  ERROR_ALREADY_NOEXISTS;
+    if (customer_find_index !=-1) return  ERROR_ALREADY_EXISTS;
     ErrorCode account_init_result = account_init(&customerPtr->accounts[type], type);
-    if(account_init_result == ERROR_OK){
-        return ERROR_OK;
-    }else{
-        return  ERROR_WRONG;
+    if(account_init_result != ERROR_OK){
+        return  ERROR_ACCOUNT_CREATED;
     }
-
+    return ERROR_OK;
 };
 ErrorCode customer_remove_account(Customer *customerPtr,AccountType type){
     if(customerPtr==NULL) return ERROR_INVALID_ARGUMENT;
@@ -66,10 +64,15 @@ ErrorCode customer_remove_account(Customer *customerPtr,AccountType type){
 
 };
 
-void print_account_type(void){
-    printf("choose one type of your account:");
-    printf("[S] Savings account");
-    printf("[C] Credit account");
-    printf("[T] Stock account");
-    printf("[F] Fund account");
-}
+void print_customer_detail(Customer *customerPtr){
+    printf(
+            "Customer\n"
+            "Customer_id: %ld\n"
+            "Name: %s\n"
+            "Phone: %s\n"
+            "Create time: %s\n",
+            customerPtr->customer_id,
+            customerPtr->name,
+            customerPtr->phone,
+            ctime(&customerPtr->timestamp));
+};

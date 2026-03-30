@@ -463,16 +463,7 @@ static void test_setup_print_account(Account *accountObj_SavingsPtr, Account *ac
 
 static void test_account_append_transaction(){
 /*
-    1️.append one transaction
-        1.1 stock add one transaction
-        1.3 saving add one transaction
-    2️.append three transaction
-        2.1 stock add three transaction
-        2.3 saving add three transaction
-    3️.trigger expand(print_out,count,capacity of tx)
-        2.1 stock add 36 transaction
-        2.3 saving add 36 transaction
-    4️.parameter（NULL）
+
     */
 
     Account accountObj_Savings;
@@ -486,10 +477,3 @@ static void test_account_append_transaction(){
     /*
         4️.parameter（NULL)
     */
-
-
-// ErrorCode account_append_transaction(Account* account, const Transaction* tx)
-// /*Declares transaction of savings and credit functions*/
-// ErrorCode transaction_saving_credit_create(Transaction *tx,TransactionType type,double price);
-// /*Declares transaction of stock and fund functions*/
-// ErrorCode transaction_stock_fund_create(Transaction *tx,TransactionType type,double price,int quantity,const char *symbol);

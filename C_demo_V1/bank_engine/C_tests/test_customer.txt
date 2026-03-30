@@ -1,0 +1,182 @@
+test_customer_init
+test_customer_add_account
+test_customer_find_account
+test_customer_remove_account
+test_customer_destroy
+
+三、Customer Unit Test 应该覆盖哪些
+
+你必须测试：
+
+① customer_init
+
+测试内容：
+
+必测
+name 正常
+phone 正常
+id 递增
+timestamp 生成
+accounts 初始化
+异常测试
+NULL pointer
+malloc fail（可选）
+② customer_add_account
+
+必须测试：
+
+正常情况
+add savings
+add credit
+add stock
+add fund
+重复添加
+
+例如：
+
+add savings twice
+
+应该：
+
+ERROR_ALREADY_EXISTS
+边界情况
+add 4 个 account（满）
+add 第5个（应该失败）
+
+因为你设计：
+
+#define MAX_COUNT_TYPE 4
+
+这是必须测试
+
+③ customer_find_account
+
+必须测试：
+
+正常
+find savings
+find credit
+find stock
+异常
+find 不存在
+find NULL
+④ customer_remove_account
+
+必须测试：
+
+正常
+remove savings
+remove stock
+异常
+remove 不存在
+remove NULL
+⑤ customer_destroy
+
+必须测试：
+
+正常
+destroy customer
+
+⚠️ 非常重要：
+
+你这里：
+
+customer_destroy
+
+没有调用：
+
+account_free
+
+这意味着：
+
+❌ memory leak
+
+所以：
+
+你必须：
+
+修改 customer_destroy
+
+（这个属于修改模块，不是测试）
+
+四、你 Customer 设计存在两个问题
+
+我必须指出：
+
+问题 ① account 数组设计问题
+
+你现在：
+
+Account *accounts;
+
+但是：
+
+你其实固定 4 个：
+
+#define MAX_COUNT_TYPE 4
+
+这意味着：
+
+你不是：
+
+dynamic container
+
+而是：
+
+fixed container
+
+这没问题，但要明确：
+
+你现在设计是：
+
+Customer
+ ├── Savings
+ ├── Credit
+ ├── Stock
+ └── Fund
+
+这是：
+
+⭐ 非常合理
+
+问题 ② remove_account 不调用 account_free
+
+你现在：
+
+customer_remove_account
+
+只是：
+
+type = -1
+
+这会：
+
+❌ memory leak
+
+如果：
+
+stock/fund 已经 malloc
+
+必须：
+
+调用：
+
+account_free
+
+否则：
+
+你测试会出现：
+
+memory leak
+
+五、Customer 单元测试需要新增的测试
+
+你目前没有：
+
+必须新增：
+
+test_customer_init
+test_customer_add_account
+test_customer_find_account
+test_customer_remove_account
+test_customer_destroy
