@@ -6,6 +6,7 @@ typedef struct{
     unsigned long customer_id;
     char name[64];
     Account *accounts;
+    int accounts_size;
     char phone[20];
     time_t timestamp;
 }Customer;

@@ -1,53 +1,7 @@
-test_customer_init
-test_customer_add_account
-test_customer_find_account
-test_customer_remove_account
-test_customer_destroy
+
 
 三、Customer Unit Test 应该覆盖哪些
 
-你必须测试：
-
-① customer_init
-
-测试内容：
-
-必测
-name 正常
-phone 正常
-id 递增
-timestamp 生成
-accounts 初始化
-异常测试
-NULL pointer
-malloc fail（可选）
-② customer_add_account
-
-必须测试：
-
-正常情况
-add savings
-add credit
-add stock
-add fund
-重复添加
-
-例如：
-
-add savings twice
-
-应该：
-
-ERROR_ALREADY_EXISTS
-边界情况
-add 4 个 account（满）
-add 第5个（应该失败）
-
-因为你设计：
-
-#define MAX_COUNT_TYPE 4
-
-这是必须测试
 
 ③ customer_find_account
 
@@ -99,45 +53,7 @@ account_free
 
 （这个属于修改模块，不是测试）
 
-四、你 Customer 设计存在两个问题
 
-我必须指出：
-
-问题 ① account 数组设计问题
-
-你现在：
-
-Account *accounts;
-
-但是：
-
-你其实固定 4 个：
-
-#define MAX_COUNT_TYPE 4
-
-这意味着：
-
-你不是：
-
-dynamic container
-
-而是：
-
-fixed container
-
-这没问题，但要明确：
-
-你现在设计是：
-
-Customer
- ├── Savings
- ├── Credit
- ├── Stock
- └── Fund
-
-这是：
-
-⭐ 非常合理
 
 问题 ② remove_account 不调用 account_free
 
@@ -169,14 +85,3 @@ account_free
 
 memory leak
 
-五、Customer 单元测试需要新增的测试
-
-你目前没有：
-
-必须新增：
-
-test_customer_init
-test_customer_add_account
-test_customer_find_account
-test_customer_remove_account
-test_customer_destroy

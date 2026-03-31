@@ -21,6 +21,7 @@ typedef enum{
     Account_Credit,
     Account_Stock,
     Account_Fund,
+    Account_Others,
 }AccountType;
 
 typedef struct{

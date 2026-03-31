@@ -1,5 +1,5 @@
-/*gcc tests/test_account.c src/account.c src/transaction.c -Iinclude -o tests/test_account
-./tests/test_account*/
+/*gcc C_tests/test_account.c src/account.c src/transaction.c -Iinclude -o C_tests/test_account
+./C_tests/test_account*/
 #include <assert.h>
 #include "account.h"
 #include <math.h>
@@ -436,7 +436,7 @@ static void test_setup_print_account(Account *accountObj_SavingsPtr, Account *ac
     *txObj_sf_ptr_ptr = malloc(MAX_UNIT*sizeof(Transaction)*3);
     assert(*txObj_sf_ptr_ptr != NULL);
     *txObj_sc_ptr_ptr = malloc(MAX_UNIT*sizeof(Transaction));
-    assert(*txObj_sf_ptr_ptr != NULL);
+    assert(*txObj_sc_ptr_ptr != NULL);
     printf("########################### 0.0 print out all the symbol and tx ##########################\n");
     for(int i=0;i<MAX_UNIT;i++){
         char symbol[16];
